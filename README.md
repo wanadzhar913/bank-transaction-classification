@@ -9,12 +9,12 @@ This repo details code for building a **text classifier for predicting Bank Tran
 
 **Transaction-level features**  
 
-1. We then created day related features to identify if the transaction happened on Friday, Monday or the weekend based on our analysis above.
+1. We then created day related features to identify if the transaction happened on Friday, Monday or the weekend based on our EDA.
 2. We also chose to keep the amount spent column on the transaction. Sizeable amounts may be correlated to specific transaction categories.
 
 **User-level features**  
 
-1. From *bank_transaction.csv*, we created aggregate features to determine, on a monthly basis, how likely is a consumer make a transaciton of a particular category (and overall to determine activeness) based on their count (in the future, perhaps amount may be better). This could potentially be an important feature to determine if, for a particular user, a transacition category is more likely. We acknowledge that this may result in a sparse dataset, but it's a good first step for experimentation.
+1. From *bank_transaction.csv*, we created aggregate features to determine, on a monthly basis, how likely a consumer is to make a transaciton of a particular category based on their count. This can potentially capture a transaction category a user has a procilivity for. We acknowledge that this may result in a sparse dataset, but it's a good first step for experimentation.
 2. From *user_profile.csv*, we included the intent columns in spite of their sparsity for experimentation.
 
 **Train-test Split**  
@@ -25,7 +25,7 @@ This repo details code for building a **text classifier for predicting Bank Tran
 ### 2.0 Model Architecture
 **Why DeBERTaV3?**   
 We chose the latest version of DeBERTa due to [SOTA (State-of-the-Art) performance on NLU (Natural Language Understanding) tasks and benchmarks](
-https://huggingface.co/microsoft/deberta-v3-base#fine-tuning-on-nlu-tasks). Moreover, with a **vocabulary of 128k and only having 86 million backbone parameters**, it is relatively efficient to finetune which is good due to my compute constraints.
+https://huggingface.co/microsoft/deberta-v3-base#fine-tuning-on-nlu-tasks). Moreover, with a **vocabulary of 128k and only having 86 million backbone parameters**, it is relatively efficient to finetune which is good due to our compute constraints.
 
 **Training Loop**  
 We trained 2 models using **Google Colab's A100 GPU (40GB VRAM)**. One model takes in text primarily as input, and the other takes text and additional non-text features. Both were trained using **PyTorch** and had the following training procedures:
@@ -59,7 +59,7 @@ For handling **non-text data**, we also created a custom class, `CustomSequenceC
 | DeBERTaV3 (Text Only)        | 10    | 0.0000050     | 3.755       | 0.102         | 0.309           | 0.913     | 0.914               | 0.858            | 0.918                | 0.913             |
 | DeBERTaV3 (Text & Non-text)  | 15    | 0.0000100     | 264.891     | 0.441         | 0.494           | 0.883     | 0.908               | 0.604            | 0.948                | 0.883             |
 
-From the above results, we can see that in the majority of instances, **our text-only model dominates**, especially when comparing macro F1. When looking at categories where there was 0 were correctly identified, the text-only model only has 1 (*Tax Refund*) while the text and non-text model has 4 (*Bank Fee*, *Interest*, *Payment*, *Tax Refund*). Additionally, all but 2 categories for the text-only model have less than 70% F1 Score for every class.
+From the above results, **our text-only model dominates**, especially when comparing Macro F1. When looking at categories where there was 0 were correctly identified, the text-only model only has 1 (*Tax Refund*) while the text and non-text model has 4 (*Bank Fee*, *Interest*, *Payment*, *Tax Refund*). Additionally, all but 2 categories for the text-only model have less than 70% F1 Score for every class.
 
 The difference in results may be due to the **sparse nature of our additional features**. For example, the user-level features (`IS_INTERESTED_{category}`) are all highly imbalanced with less than 10% are actually interested in each category. Hence, more data exploration and feature engineering work needs to be done to improve the text and non-text model.
 
